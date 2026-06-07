@@ -824,6 +824,8 @@ function App() {
             open the printable report to export a snapshot of your budget plan
              that you can share with stakeholders.
           </p>
+          <br />
+          <p className="footer-note">Disclaimer: This is a planning tool that provides estimates based on user inputs and assumptions. It is not a quote or binding offer, and should not be used for billing or financial commitments. Actual costs and AI Credit usage may vary based on factors such as user behavior, profile assignments, and changes to GitHub Copilot pricing or features. Always refer to official GitHub documentation and consult with your GitHub account representative for accurate pricing and budgeting information.</p>
         </div>
         <div className="hero-form">
           <label className="hero-field hero-field--full">
@@ -1434,7 +1436,7 @@ function App() {
             target="_blank"
             rel="noreferrer"
           >
-            © 2026 GitHub Copilot Budget Simulator. MIT License. Last Updated 7-June-2026.
+            © 2026 GitHub Copilot Budget Simulator. MIT License. 
           </a>
         </p>
         <p className="footer-note">
@@ -1447,6 +1449,8 @@ function App() {
             Report bugs or request features on GitHub.
           </a>
         </p>
+        <p className="footer-note">Disclaimer: This is a planning tool that provides estimates based on user inputs and assumptions. It is not a quote or binding offer, and should not be used for billing or financial commitments. Actual costs and AI Credit usage may vary based on factors such as user behavior, profile assignments, and changes to GitHub Copilot pricing or features. Always refer to official GitHub documentation and consult with your GitHub account representative for accurate pricing and budgeting information.</p>
+        <p className="footer-note">Last Updated: 7-June-2026</p>
         <p className="footer-note">Made with ❤️ for GitHub Copilot Admins using GitHub Copilot</p>
       </footer>
     </div>

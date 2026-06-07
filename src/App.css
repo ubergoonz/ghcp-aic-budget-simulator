@@ -407,12 +407,12 @@ input:focus {
 
 .footer-link {
   color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .footer-link:hover {
   color: #4338ca;
+  text-decoration: none;
 }
 
 .footer-note:last-child {
