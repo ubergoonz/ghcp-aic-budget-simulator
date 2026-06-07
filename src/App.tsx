@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { SiGithubcopilot } from 'react-icons/si'
 import './App.css'
 import {
   addProfileAllocation,
@@ -32,6 +33,7 @@ const parseNumber = (value: string) => {
 
 const round = (value: number, digits = 2) => Number(value.toFixed(digits))
 const roundWhole = (value: number) => Math.round(value)
+const normalizeIntegerInput = (value: string) => String(roundWhole(parseNumber(value)))
 
 const normalizeSplitPercents = (rawSplitPercents: number[], profileCount: number) => {
   if (profileCount <= 0) {
@@ -474,6 +476,43 @@ function App() {
     seatCost: division.seatCost,
   }))
 
+  const pivotViewTotals = settings.profiles.map((profile) => {
+    const profileCells = divisionPivotTable.map(
+      (division) => division.profileCells.find((cell) => cell.profileId === profile.id),
+    )
+
+    return {
+      profileId: profile.id,
+      users: profileCells.reduce((sum, cell) => sum + (cell?.users ?? 0), 0),
+      userLevelBudget: profileCells.reduce(
+        (sum, cell) => sum + (cell?.userLevelBudget ?? 0),
+        0,
+      ),
+    }
+  })
+
+  const divisionRollUpTotals = useMemo(
+    () =>
+      metrics.divisions.reduce(
+        (totals, division) => ({
+          users: totals.users + division.totalUsers,
+          sharedPoolCredits:
+            totals.sharedPoolCredits + division.includedCredits + division.overageCredits,
+          overageCredits: totals.overageCredits + division.overageCredits,
+          userLevelBudget: totals.userLevelBudget + division.totalOverageBudget,
+          seatCost: totals.seatCost + division.seatCost,
+        }),
+        {
+          users: 0,
+          sharedPoolCredits: 0,
+          overageCredits: 0,
+          userLevelBudget: 0,
+          seatCost: 0,
+        },
+      ),
+    [metrics.divisions],
+  )
+
   const openPrintablePage = () => {
     const printWindow = window.open('', '_blank', 'width=1200,height=900')
 
@@ -546,6 +585,39 @@ function App() {
       )
       .join('')
 
+    const pivotTotalsHtml = `
+      <tr class="print-table__total-row">
+        <th scope="row">Total</th>
+        ${pivotViewTotals
+          .map(
+            (profile) => `
+              <td>
+                ${profile.users > 0 || profile.userLevelBudget > 0
+                  ? `${formatNumber(profile.users)} users, ${formatCurrency(profile.userLevelBudget)} budget`
+                  : '0 users, $0 budget'}
+              </td>
+            `,
+          )
+          .join('')}
+        <td>${formatNumber(divisionPivotTable.reduce((sum, division) => sum + division.totalUsers, 0))}</td>
+        <td>${formatNumber(divisionPivotTable.reduce((sum, division) => sum + division.sharedPoolCredits, 0))}</td>
+        <td>${formatNumber(divisionPivotTable.reduce((sum, division) => sum + division.overageCredits, 0))}</td>
+        <td>${formatCurrency(divisionPivotTable.reduce((sum, division) => sum + division.userLevelBudget, 0))}</td>
+        <td>${formatCurrency(divisionPivotTable.reduce((sum, division) => sum + division.seatCost, 0))}</td>
+      </tr>
+    `
+
+    const divisionRollUpTotalsHtml = `
+      <tr class="print-table__total-row">
+        <th scope="row">Total</th>
+        <td>${formatNumber(divisionRollUpTotals.users)}</td>
+        <td>${formatNumber(divisionRollUpTotals.sharedPoolCredits)}</td>
+        <td>${formatNumber(divisionRollUpTotals.overageCredits)}</td>
+        <td>${formatCurrency(divisionRollUpTotals.userLevelBudget)}</td>
+        <td>${formatCurrency(divisionRollUpTotals.seatCost)}</td>
+      </tr>
+    `
+
     const printableHtml = `
       <!doctype html>
       <html>
@@ -616,16 +688,40 @@ function App() {
               border-collapse: collapse;
               table-layout: fixed;
             }
-            th, td {
+            .print-table {
+              border: 1px solid #dbe4f0;
+              border-radius: 14px;
+              overflow: hidden;
+            }
+            .print-table th, .print-table td {
               border-bottom: 1px solid #e2e8f0;
               padding: 10px 8px;
               text-align: left;
               vertical-align: top;
               word-break: break-word;
             }
-            thead th {
+            .print-table tbody tr:nth-child(odd) {
+              background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(245, 243, 255, 0.95));
+            }
+            .print-table tbody tr:nth-child(even) {
+              background: rgba(248, 250, 252, 0.95);
+            }
+            .print-table thead th {
               background: #eff6ff;
               font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+            }
+            .print-table__total-row {
+              background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+            }
+            .print-table__total-row th,
+            .print-table__total-row td {
+              color: #ffffff;
+              font-weight: 700;
+              border-bottom-color: rgba(255, 255, 255, 0.18);
+            }
+            .print-table__total-row th {
               text-transform: uppercase;
               letter-spacing: 0.04em;
             }
@@ -655,7 +751,7 @@ function App() {
 
             <section class="section">
               <h2>Division pivot view</h2>
-              <table>
+              <table class="print-table">
                 <thead>
                   <tr>
                     <th>Division</th>
@@ -669,13 +765,14 @@ function App() {
                 </thead>
                 <tbody>
                   ${pivotRowsHtml}
+                  ${pivotTotalsHtml}
                 </tbody>
               </table>
             </section>
 
             <section class="section">
               <h2>Division roll-up</h2>
-              <table>
+              <table class="print-table">
                 <thead>
                   <tr>
                     <th>Division</th>
@@ -688,6 +785,7 @@ function App() {
                 </thead>
                 <tbody>
                   ${divisionRowsHtml}
+                  ${divisionRollUpTotalsHtml}
                 </tbody>
               </table>
             </section>
@@ -708,11 +806,23 @@ function App() {
       <header className="hero-panel">
         <div className="hero-copy">
           <p className="eyebrow">GitHub Copilot budget planning</p>
-          <h1>Model shared-pool AI Credits, division budgets, and overage.</h1>
+          <div className="hero-title-row">
+            <SiGithubcopilot className="hero-fa-icon" title="GitHub Copilot icon" />
+            <h1>Cost & AIC Budget Simulator</h1>
+          </div>
+          <br />
           <p className="hero-text">
-            Configure organization totals, start with Standard and Advanced
-            assumptions, then add more profiles and allocate users and monthly
-            budget by division.
+            This planner helps you model how GitHub Copilot costs and AI Credits (AIC) could be 
+            allocated across your enterprise, based on the number of users in 
+            each division and the profiles they fall into. 
+          </p>
+          <br />
+          <p className="hero-text">
+            Use it to find the right balance of included AI Credits and 
+            user-level budgets for each division, and to estimate potential 
+            overage costs. When you're ready, 
+            open the printable report to export a snapshot of your budget plan
+             that you can share with stakeholders.
           </p>
         </div>
         <div className="hero-form">
@@ -828,7 +938,9 @@ function App() {
                       </td>
                       <td>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           min="0"
                           step="1"
                           value={profile.includedCredits}
@@ -836,7 +948,7 @@ function App() {
                             updateProfile(
                               profile.id,
                               'includedCredits',
-                              event.target.value,
+                              normalizeIntegerInput(event.target.value),
                             )
                           }
                         />
@@ -935,12 +1047,17 @@ function App() {
                         <label className="field division-users-field">
                           <span>Total division users</span>
                           <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             min="0"
                             step="1"
                             value={division.totalUsers}
                             onChange={(event) =>
-                              updateDivisionTotalUsers(division.id, event.target.value)
+                              updateDivisionTotalUsers(
+                                division.id,
+                                normalizeIntegerInput(event.target.value),
+                              )
                             }
                           />
                         </label>
@@ -949,7 +1066,9 @@ function App() {
                             <label className="field division-percent" key={profile.id}>
                               <span>{`${profile.name} %`}</span>
                               <input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 min="0"
                                 max="100"
                                 step="1"
@@ -958,7 +1077,7 @@ function App() {
                                   updateDivisionSplit(
                                     division.id,
                                     index,
-                                    event.target.value,
+                                    normalizeIntegerInput(event.target.value),
                                   )
                                 }
                               />
@@ -1203,7 +1322,7 @@ function App() {
           </div>
         </div>
         <div className="table-wrap">
-          <table className="data-table">
+          <table className="data-table data-table--results">
             <thead>
               <tr>
                 <th scope="col">Division</th>
@@ -1237,6 +1356,21 @@ function App() {
                   <td>{formatCurrency(division.seatCost)}</td>
                 </tr>
               ))}
+              <tr className="data-table__total-row">
+                <th scope="row">Total</th>
+                {pivotViewTotals.map((profile) => (
+                  <td key={profile.profileId}>
+                    {profile.users > 0 || profile.userLevelBudget > 0
+                      ? `${formatNumber(profile.users)} users, ${formatCurrency(profile.userLevelBudget)} budget`
+                      : '0 users, $0 budget'}
+                  </td>
+                ))}
+                <td>{formatNumber(divisionPivotTable.reduce((sum, division) => sum + division.totalUsers, 0))}</td>
+                <td>{formatNumber(divisionPivotTable.reduce((sum, division) => sum + division.sharedPoolCredits, 0))}</td>
+                <td>{formatNumber(divisionPivotTable.reduce((sum, division) => sum + division.overageCredits, 0))}</td>
+                <td>{formatCurrency(divisionPivotTable.reduce((sum, division) => sum + division.userLevelBudget, 0))}</td>
+                <td>{formatCurrency(divisionPivotTable.reduce((sum, division) => sum + division.seatCost, 0))}</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1249,7 +1383,7 @@ function App() {
         </div>
 
         <div className="table-wrap">
-          <table className="data-table data-table--secondary">
+          <table className="data-table data-table--secondary data-table--results">
             <thead>
               <tr>
                 <th scope="col">Division</th>
@@ -1275,6 +1409,14 @@ function App() {
                   <td>{formatCurrency(division.seatCost)}</td>
                 </tr>
               ))}
+              <tr className="data-table__total-row">
+                <th scope="row">Total</th>
+                <td>{formatNumber(divisionRollUpTotals.users)}</td>
+                <td>{formatNumber(divisionRollUpTotals.sharedPoolCredits)}</td>
+                <td>{formatNumber(divisionRollUpTotals.overageCredits)}</td>
+                <td>{formatCurrency(divisionRollUpTotals.userLevelBudget)}</td>
+                <td>{formatCurrency(divisionRollUpTotals.seatCost)}</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1283,7 +1425,29 @@ function App() {
       <footer className="page-actions">
         <button type="button" className="button" onClick={openPrintablePage}>
           Open printable page
+        <br />
         </button>
+        <p className="footer-note">
+          <a
+            className="footer-link"
+            href="https://github.com/ubergoonz/ghcp-aic-budget-simulator/blob/main/LICENSE"
+            target="_blank"
+            rel="noreferrer"
+          >
+            © 2026 GitHub Copilot Budget Simulator. MIT License.
+          </a>
+        </p>
+        <p className="footer-note">
+          <a
+            className="footer-link"
+            href="https://github.com/ubergoonz/ghcp-aic-budget-simulator/issues/new"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Report bugs or request features on GitHub.
+          </a>
+        </p>
+        <p className="footer-note">Made with ❤️ for GitHub Copilot Admins using GitHub Copilot</p>
       </footer>
     </div>
   )
