@@ -1434,7 +1434,7 @@ function App() {
             target="_blank"
             rel="noreferrer"
           >
-            © 2026 GitHub Copilot Budget Simulator. MIT License.
+            © 2026 GitHub Copilot Budget Simulator. MIT License. Last Updated 7-June-2026.
           </a>
         </p>
         <p className="footer-note">
