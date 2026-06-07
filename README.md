@@ -10,6 +10,12 @@ It helps you:
 - enable a promotional period for selected profiles
 - generate a printable report for sharing or review
 
+{==
+
+Access the live app at https://ubergoonz.github.io/ghcp-aic-budget-simulator/
+
+==}
+
 ## What it does
 
 The app is organized around two planning layers:
