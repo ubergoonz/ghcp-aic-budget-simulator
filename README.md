@@ -1,5 +1,7 @@
 # GitHub Copilot Budget Simulator
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT){ target="_blank" rel="noopener noreferrer"}
+
 GitHub Copilot Budget Simulator is a local React + TypeScript app for modeling Copilot-style budgets across an organization and its divisions.
 
 It helps you:
@@ -10,11 +12,7 @@ It helps you:
 - enable a promotional period for selected profiles
 - generate a printable report for sharing or review
 
-{==
-
 Access the live app at https://ubergoonz.github.io/ghcp-aic-budget-simulator/
-
-==}
 
 ## What it does
 

@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SiGithubcopilot } from 'react-icons/si'
+import { FaGithub } from 'react-icons/fa'
 import './App.css'
 import {
   addProfileAllocation,
@@ -142,6 +143,12 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;')
 
+declare global {
+  interface Window {
+    NekoType?: string
+  }
+}
+
 function App() {
   const [settings, setSettings] = useState(defaultOrganizationSettings)
   const [divisions, setDivisions] = useState<Division[]>([
@@ -153,6 +160,22 @@ function App() {
     budgetPreparedOn: getTodayLocalInputValue(),
     aboutBudget: '',
   })
+
+  useEffect(() => {
+    const existingScript = document.getElementById('webneko-script')
+
+    if (existingScript) {
+      return
+    }
+
+    window.NekoType = 'white'
+
+    const script = document.createElement('script')
+    script.id = 'webneko-script'
+    script.src = 'https://webneko.net/n20171213.js'
+    script.async = true
+    document.body.appendChild(script)
+  }, [])
 
   const totalUsers = useMemo(
     () =>
@@ -1442,15 +1465,27 @@ function App() {
         <p className="footer-note">
           <a
             className="footer-link"
+            href="https://github.com/ubergoonz/ghcp-aic-budget-simulator/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <FaGithub className="footer-github-icon" aria-hidden="true" />
+            Repository is hosted on GitHub.
+          </a>
+        </p>
+        <p className="footer-note">
+          <a
+            className="footer-link"
             href="https://github.com/ubergoonz/ghcp-aic-budget-simulator/issues/new"
             target="_blank"
             rel="noreferrer"
           >
+            <FaGithub className="footer-github-icon" aria-hidden="true" />
             Report bugs or request features on GitHub.
           </a>
         </p>
         <p className="footer-note">Disclaimer: This is a planning tool that provides estimates based on user inputs and assumptions. It is not a quote or binding offer, and should not be used for billing or financial commitments. Actual costs and AI Credit usage may vary based on factors such as user behavior, profile assignments, and changes to GitHub Copilot pricing or features. Always refer to official GitHub documentation and consult with your GitHub account representative for accurate pricing and budgeting information.</p>
-        <p className="footer-note">Last Updated: 7-June-2026</p>
+        <p className="footer-note">Created on 7-June-2026 | Last Updated: 7-June-2026</p>
         <p className="footer-note">Made with ❤️ for GitHub Copilot Admins using GitHub Copilot</p>
       </footer>
     </div>

@@ -408,11 +408,18 @@ input:focus {
 .footer-link {
   color: inherit;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .footer-link:hover {
   color: #4338ca;
   text-decoration: none;
+}
+
+.footer-github-icon {
+  font-size: 0.85rem;
 }
 
 .footer-note:last-child {
